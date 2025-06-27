@@ -7,69 +7,106 @@ import {
   Modificar,
   Reactivar,
 } from "../services/categorias.service.js";
+import ApiError from "../middlewares/ApiError.js";
 
-
-export const CrearCategoriaController = async (req, res) => {
+// Crear categoría
+export const CrearCategoriaController = async (req, res, next) => {
   try {
     const id = await Crear(req.body);
     res.status(201).json({ message: 'Categoría creada', id });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    next(
+      err instanceof ApiError
+        ? err
+        : new ApiError(err.message || "Error al crear categoría", 400)
+    );
   }
 };
 
-export const ListarCategoriasController = async (req, res) => {
+// Listar categorías
+export const ListarCategoriasController = async (req, res, next) => {
   try {
     const soloActivas = req.query.todas !== 'true';
     const data = await Listar(soloActivas);
     res.json({ data });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(
+      err instanceof ApiError
+        ? err
+        : new ApiError(err.message || "Error al listar categorías", 500)
+    );
   }
 };
 
-export const ObtenerCategoriaController = async (req, res) => {
+// Obtener detalle de categoría
+export const ObtenerCategoriaController = async (req, res, next) => {
   try {
     const cat = await Detalle(req.params.id);
-    if (!cat) return res.status(404).json({ message: 'Categoría no encontrada' });
+    if (!cat) {
+      return next(new ApiError('Categoría no encontrada', 404));
+    }
     res.json(cat);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(
+      err instanceof ApiError
+        ? err
+        : new ApiError(err.message || "Error al obtener categoría", 500)
+    );
   }
 };
 
-export const EditarCategoriaController = async (req, res) => {
+// Editar categoría
+export const EditarCategoriaController = async (req, res, next) => {
   try {
     await Modificar(req.params.id, req.body);
     res.json({ message: 'Categoría actualizada' });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    next(
+      err instanceof ApiError
+        ? err
+        : new ApiError(err.message || "Error al editar categoría", 400)
+    );
   }
 };
 
-export const DesactivarCategoriaController = async (req, res) => {
+// Desactivar categoría
+export const DesactivarCategoriaController = async (req, res, next) => {
   try {
     await Desactivar(req.params.id);
     res.json({ message: 'Categoría desactivada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(
+      err instanceof ApiError
+        ? err
+        : new ApiError(err.message || "Error al desactivar categoría", 500)
+    );
   }
 };
 
-export const ReactivarCategoriaController = async (req, res) => {
+// Reactivar categoría
+export const ReactivarCategoriaController = async (req, res, next) => {
   try {
     await Reactivar(req.params.id);
     res.json({ message: 'Categoría reactivada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(
+      err instanceof ApiError
+        ? err
+        : new ApiError(err.message || "Error al reactivar categoría", 500)
+    );
   }
 };
 
-export const BorrarCategoriaDefinitivaController = async (req, res) => {
+// Eliminar definitivamente
+export const BorrarCategoriaDefinitivaController = async (req, res, next) => {
   try {
     await Borrar(req.params.id);
     res.json({ message: 'Categoría eliminada permanentemente' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(
+      err instanceof ApiError
+        ? err
+        : new ApiError(err.message || "Error al eliminar categoría", 500)
+    );
   }
 };

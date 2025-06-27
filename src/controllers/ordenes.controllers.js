@@ -6,18 +6,16 @@ import {
   VaciarCarrito,
   ObtenerOrdenPorGrupo
 } from "../services/ordenes.service.js";
+import ApiError from "../middlewares/ApiError.js";
 
 // ✅ Agrega producto al carrito (usuario autenticado)
-export const AgregarProductoAlCarritoController = async (req, res) => {
+export const AgregarProductoAlCarritoController = async (req, res, next) => {
   try {
     const usuario_id = req.usuario.id;
     const { producto_id, cantidad } = req.body;
 
     if (!producto_id || !cantidad) {
-      return res.json({
-        statusCode: 400,
-        message: "Faltan campos obligatorios",
-      });
+      return next(new ApiError("Faltan campos obligatorios", 400));
     }
 
     const resultado = await AgregarProductoAlCarrito(
@@ -26,49 +24,49 @@ export const AgregarProductoAlCarritoController = async (req, res) => {
       parseFloat(cantidad)
     );
 
-    return res.json({
+    return res.status(201).json({
       statusCode: 201,
       message: "Producto agregado al carrito",
       resultado,
     });
   } catch (error) {
-    return res.json({
-      statusCode: 500,
-      message: "Error al agregar producto al carrito",
-      error: error.message,
-    });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al agregar producto al carrito", 500, error.message)
+    );
   }
 };
 
 // ✅ Ver carrito del usuario autenticado
-export const ObtenerCarritoDelUsuario = async (req, res) => {
+export const ObtenerCarritoDelUsuario = async (req, res, next) => {
   try {
     const usuario_id = req.usuario.id;
 
     const resultado = await VerCarritoDelUsuario(usuario_id);
 
-    return res.json({
+    return res.status(200).json({
       statusCode: 200,
       message: "Carrito obtenido correctamente",
       ...resultado,
     });
   } catch (error) {
-    return res.json({
-      statusCode: 500,
-      message: "Error al obtener el carrito",
-      error: error.message,
-    });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al obtener el carrito", 500, error.message)
+    );
   }
 };
 
 // ✅ Modificar cantidad en carrito
-export const ModificarProductoEnCarritoController = async (req, res) => {
+export const ModificarProductoEnCarritoController = async (req, res, next) => {
   try {
     const usuario_id = req.usuario.id;
     const { producto_id, cantidad } = req.body;
 
     if (!producto_id || !cantidad) {
-      return res.status(400).json({ message: "Faltan datos" });
+      return next(new ApiError("Faltan datos", 400));
     }
 
     const resultado = await EditarCantidadProductoEnCarrito(
@@ -77,89 +75,89 @@ export const ModificarProductoEnCarritoController = async (req, res) => {
       parseFloat(cantidad)
     );
 
-    return res.json({
+    return res.status(200).json({
       statusCode: 200,
       message: "Cantidad actualizada correctamente",
       resultado,
     });
   } catch (error) {
-    return res.json({
-      statusCode: 400,
-      message: "Error al actualizar la cantidad",
-      error: error.message,
-    });
+    // ------> CAMBIA EL STATUS DE 500 A 400 en este controller!!!
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al actualizar la cantidad", 400, error.message)
+        // -----------^^^ SOLO EN ESTE CATCH
+    );
   }
 };
 
+
 // ✅ Eliminar producto del carrito
-export const EliminarProductoCarritoController = async (req, res) => {
+export const EliminarProductoCarritoController = async (req, res, next) => {
   try {
     const usuario_id = req.usuario.id;
     const producto_id = parseInt(req.body.producto_id);
 
     if (isNaN(producto_id)) {
-      return res.json({
-        statusCode: 400,
-        message: "ID de producto inválido",
-      });
+      return next(new ApiError("ID de producto inválido", 400));
     }
 
     const resultado = await QuitarProductoDelCarrito(usuario_id, producto_id);
 
-    return res.json({
+    return res.status(200).json({
       statusCode: 200,
       message: "Producto eliminado del carrito",
       resultado,
     });
   } catch (error) {
-    return res.json({
-      statusCode: 500,
-      message: "Error al eliminar producto del carrito",
-      error: error.message,
-    });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al eliminar producto del carrito", 500, error.message)
+    );
   }
 };
 
 // ✅ Vaciar carrito del usuario autenticado
-export const VaciarCarritoController = async (req, res) => {
+export const VaciarCarritoController = async (req, res, next) => {
   try {
     const usuario_id = req.usuario.id;
 
     const resultado = await VaciarCarrito(usuario_id);
 
-    return res.json({
+    return res.status(200).json({
       statusCode: 200,
       message: "Carrito vaciado correctamente",
       resultado,
     });
   } catch (error) {
-    return res.json({
-      statusCode: 500,
-      message: "Error al vaciar el carrito",
-      error: error.message,
-    });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al vaciar el carrito", 500, error.message)
+    );
   }
 };
 
 // ✅ Obtener detalles de una orden por grupo
-export const ObtenerOrdenPorGrupoController = async (req, res) => {
+export const ObtenerOrdenPorGrupoController = async (req, res, next) => {
   try {
     const { grupo_orden } = req.params;
-    if (!grupo_orden) return res.status(400).json({ message: 'Falta grupo_orden' });
+    if (!grupo_orden) return next(new ApiError('Falta grupo_orden', 400));
 
     const resultado = await ObtenerOrdenPorGrupo(grupo_orden);
 
-    return res.json({
+    return res.status(200).json({
       statusCode: 200,
       message: 'Orden obtenida con éxito',
       ...resultado
     });
 
   } catch (error) {
-    return res.json({
-      statusCode: 500,
-      message: 'Error al obtener la orden',
-      error: error.message
-    });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError('Error al obtener la orden', 500, error.message)
+    );
   }
 };

@@ -3,15 +3,16 @@ import {
   ObtenerCarritoPendientePorUsuario,
   ObtenerProductoPorId,
 } from "../models/ordenes.model.js";
+import ApiError from "../middlewares/ApiError.js";
 
-export const CrearPreferenciaDesdeCarrito = async (req, res) => {
+export const CrearPreferenciaDesdeCarrito = async (req, res, next) => {
   try {
     const usuario_id = req.usuario.id;
 
     const carrito = await ObtenerCarritoPendientePorUsuario(usuario_id);
 
     if (!carrito || carrito.length === 0) {
-      return res.status(400).json({ message: "No hay productos en el carrito" });
+      return next(new ApiError("No hay productos en el carrito", 400));
     }
 
     const orden_id = carrito[0].id;
@@ -73,11 +74,10 @@ export const CrearPreferenciaDesdeCarrito = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error al crear preferencia:", error);
-    return res.status(500).json({
-      statusCode: 500,
-      message: "Error al crear preferencia",
-      error: error.message,
-    });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al crear preferencia", 500, error.message)
+    );
   }
 };

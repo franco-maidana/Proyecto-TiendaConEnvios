@@ -1,7 +1,9 @@
 import * as AuthService from "../services/auth.service.js";
 import { registrarIntentoFallido } from "../middlewares/emailLoginRateLimit.js";
+import ApiError from "../middlewares/ApiError.js";
 
-export const registrar = async (req, res) => {
+// Registrar usuario
+export const registrar = async (req, res, next) => {
   try {
     const resultado = await AuthService.registrarUsuario(req.body);
     res.status(201).json({
@@ -9,12 +11,17 @@ export const registrar = async (req, res) => {
       usuario: resultado,
     });
   } catch (err) {
-    console.error("❌ Error en registrar:", err); // 👉 Log del error en consola
-    res.status(400).json({ error: err.message });
+    // Error controlado o inesperado
+    next(
+      err instanceof ApiError
+        ? err
+        : new ApiError(err.message || "Error al registrar usuario", 400)
+    );
   }
 };
 
-export const login = async (req, res) => {
+// Login
+export const login = async (req, res, next) => {
   try {
     const { token, usuario } = await AuthService.loginUsuario(req.body);
 
@@ -30,24 +37,29 @@ export const login = async (req, res) => {
       usuario,
     });
   } catch (err) {
+    // Rate limiting en login
     if (req.body.email) registrarIntentoFallido(req.body.email);
 
+    // Error por email no verificado
     if (err.message && /verific(a|ar).*correo/i.test(err.message)) {
-      return res.status(401).json({ error: err.message });
+      return next(new ApiError(err.message, 401));
     }
 
-    res.status(401).json({ error: "Credenciales inválidas" });
+    // Cualquier otro error de login
+    next(
+      err instanceof ApiError
+        ? err
+        : new ApiError("Credenciales inválidas", 401)
+    );
   }
 };
 
-// cierre de uan sessions
-export const logout = (req, res) => {
+// Cierre de sesión
+export const logout = (req, res, next) => {
   const token = req.cookies?.token;
 
   if (!token) {
-    return res.status(400).json({
-      mensaje: "No hay sesión iniciada",
-    });
+    return next(new ApiError("No hay sesión iniciada", 400));
   }
 
   res.clearCookie("token", {

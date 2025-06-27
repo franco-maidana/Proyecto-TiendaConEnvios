@@ -6,18 +6,24 @@ import {
   CancelarCarritoService,
   EliminarProductoService
 } from '../services/ordenLocal.service.js';
+import ApiError from '../middlewares/ApiError.js';
 
 // 🧾 Crear carrito vacío = crea una orden_Local
-export const CrearCarritoController = async (req, res) => {
+export const CrearCarritoController = async (req, res, next) => {
   try {
     const id = await CrearCarritoService();
     res.status(201).json({ message: 'Carrito creado', orden_id: id });
   } catch (error) {
-    res.status(500).json({ message: 'Error al crear carrito', error: error.message });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError('Error al crear carrito', 500, error.message)
+    );
   }
 };
-// ➕ Agregar producto al carrito == agrega un producto en la orden_local
-export const AgregarProductoController = async (req, res) => {
+
+// ➕ Agregar producto al carrito
+export const AgregarProductoController = async (req, res, next) => {
   try {
     const { ordenId } = req.params;
     const { producto_id, cantidad } = req.body;
@@ -26,21 +32,31 @@ export const AgregarProductoController = async (req, res) => {
 
     res.status(200).json({ message: 'Producto agregado al carrito' });
   } catch (error) {
-    res.status(500).json({ message: 'Error al agregar producto', error: error.message });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError('Error al agregar producto', 500, error.message)
+    );
   }
 };
-// 🔍 Ver carrito = muestra la orden con los productos adentro y el total a pagar 
-export const ObtenerCarritoController = async (req, res) => {
+
+// 🔍 Ver carrito
+export const ObtenerCarritoController = async (req, res, next) => {
   try {
     const { ordenId } = req.params;
     const result = await ObtenerCarritoService(ordenId);
     res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ message: 'Error al obtener carrito', error: error.message });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError('Error al obtener carrito', 500, error.message)
+    );
   }
 };
-// ✅ Confirmar carrito == confirma el pago 
-export const ConfirmarCarritoController = async (req, res) => {
+
+// ✅ Confirmar carrito
+export const ConfirmarCarritoController = async (req, res, next) => {
   try {
     const { ordenId } = req.params;
     const result = await ConfirmarCarritoService(ordenId);
@@ -49,29 +65,40 @@ export const ConfirmarCarritoController = async (req, res) => {
       ...result
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error al confirmar venta', error: error.message });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError('Error al confirmar venta', 500, error.message)
+    );
   }
 };
-// ❌ Cancelar carrito == elimina la ordenLocal
-export const CancelarCarritoController = async (req, res) => {
+
+// ❌ Cancelar carrito
+export const CancelarCarritoController = async (req, res, next) => {
   try {
     const { ordenId } = req.params;
     await CancelarCarritoService(ordenId);
     res.status(200).json({ message: 'Carrito cancelado y eliminado' });
   } catch (error) {
-    res.status(500).json({ message: 'Error al cancelar carrito', error: error.message });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError('Error al cancelar carrito', 500, error.message)
+    );
   }
 };
-// Elimina el producto del carrito = Elimina el producto dentro de la orden 
-export const EliminarProductoDelCarritoController = async (req, res) => {
+
+// 🗑️ Eliminar producto del carrito
+export const EliminarProductoDelCarritoController = async (req, res, next) => {
   try {
     const { ordenId, productoId } = req.params;
     await EliminarProductoService({ ordenId, productoId });
     res.status(200).json({ message: 'Producto eliminado del carrito' });
   } catch (error) {
-    res.status(500).json({
-      message: 'Error al eliminar producto del carrito',
-      error: error.message,
-    });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError('Error al eliminar producto del carrito', 500, error.message)
+    );
   }
 };

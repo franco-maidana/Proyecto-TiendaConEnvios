@@ -47,6 +47,8 @@ beforeAll(async () => {
     const carrito = await ObtenerCarritoPendientePorUsuario(usuario_id);
     const producto = carrito.find(p => p.producto_id === producto_id);
 
+    console.log('Producto encontrado en carrito:', producto); // <-- este
+
     expect(producto).toBeDefined();
     expect(Number(producto.cantidad)).toBe(nuevaCantidad);
   });

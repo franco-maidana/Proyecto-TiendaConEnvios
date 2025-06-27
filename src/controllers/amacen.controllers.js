@@ -8,8 +8,10 @@ import {
   BorrarEnvase,
   BorrarInsumo,
 } from "../services/almacen.service.js";
+import ApiError from "../middlewares/ApiError.js";
 
-export const CrearInsumoController = async (req, res) => {
+// Crear insumo
+export const CrearInsumoController = async (req, res, next) => {
   try {
     const {
       nombre,
@@ -20,7 +22,6 @@ export const CrearInsumoController = async (req, res) => {
       precio_seco = 0,
     } = req.body;
 
-    // Convertir strings numéricos a número real si vienen de Postman
     const insumo_id = await CrearInsumoConGasto({
       nombre,
       tipo,
@@ -36,14 +37,16 @@ export const CrearInsumoController = async (req, res) => {
       insumo_id,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Error al crear insumo",
-      error: error.message,
-    });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al crear insumo", 500, error.message)
+    );
   }
 };
 
-export const CrearEnvaseController = async (req, res) => {
+// Crear envase
+export const CrearEnvaseController = async (req, res, next) => {
   try {
     const { tipo, capacidad_litros, stock, precio_envase } = req.body;
     const id = await CrearEnvaseConGasto(
@@ -59,64 +62,94 @@ export const CrearEnvaseController = async (req, res) => {
       envase_id: id,
     });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Error al crear envase", error: error.message });
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al crear envase", 500, error.message)
+    );
   }
 };
 
-export const VerInsumosController = async (req, res) => {
+// Listar insumos
+export const VerInsumosController = async (req, res, next) => {
   try {
     const data = await ListarInsumos();
     res.json({ statusCode: 200, data });
-  } catch (err) {
-    res.status(500).json({ message: 'Error al listar insumos', error: err.message });
+  } catch (error) {
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al listar insumos", 500, error.message)
+    );
   }
 };
 
-export const VerEnvasesController = async (req, res) => {
+// Listar envases
+export const VerEnvasesController = async (req, res, next) => {
   try {
     const data = await ListarEnvases();
     res.json({ statusCode: 200, data });
-  } catch (err) {
-    res.status(500).json({ message: 'Error al listar envases', error: err.message });
+  } catch (error) {
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al listar envases", 500, error.message)
+    );
   }
 };
 
-export const EditarInsumoController = async (req, res) => {
+// Editar insumo
+export const EditarInsumoController = async (req, res, next) => {
   try {
     await ModificarInsumo(req.params.id, req.body);
     res.json({ statusCode: 200, message: 'Insumo modificado correctamente' });
-  } catch (err) {
-    res.status(500).json({ message: 'Error al modificar insumo', error: err.message });
+  } catch (error) {
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al modificar insumo", 500, error.message)
+    );
   }
 };
 
-export const EditarEnvaseController = async (req, res) => {
+// Editar envase
+export const EditarEnvaseController = async (req, res, next) => {
   try {
     await ModificarEnvase(req.params.id, req.body);
     res.json({ statusCode: 200, message: 'Envase modificado correctamente' });
-  } catch (err) {
-    console.error('❌ ERROR en EditarEnvaseController:', err.message);
-    res.status(500).json({ message: 'Error al modificar envase', error: err.message });
+  } catch (error) {
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al modificar envase", 500, error.message)
+    );
   }
 };
 
-
-export const EliminarInsumoController = async (req, res) => {
+// Eliminar insumo
+export const EliminarInsumoController = async (req, res, next) => {
   try {
     await BorrarInsumo(req.params.id);
     res.json({ statusCode: 200, message: 'Insumo eliminado' });
-  } catch (err) {
-    res.status(500).json({ message: 'Error al eliminar insumo', error: err.message });
+  } catch (error) {
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al eliminar insumo", 500, error.message)
+    );
   }
 };
 
-export const EliminarEnvaseController = async (req, res) => {
+// Eliminar envase
+export const EliminarEnvaseController = async (req, res, next) => {
   try {
     await BorrarEnvase(req.params.id);
     res.json({ statusCode: 200, message: 'Envase eliminado' });
-  } catch (err) {
-    res.status(500).json({ message: 'Error al eliminar envase', error: err.message });
+  } catch (error) {
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError("Error al eliminar envase", 500, error.message)
+    );
   }
 };

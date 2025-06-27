@@ -1,5 +1,6 @@
 import mercadoPago from '../config/mercadoPago.js';
 import { ConfirmarOrdenUsuario } from '../services/ordenes.service.js';
+import ApiError from '../middlewares/ApiError.js';
 
 export const WebhookMP = async (req, res) => {
   try {
@@ -24,7 +25,6 @@ export const WebhookMP = async (req, res) => {
 
     return res.sendStatus(200);
   } catch (error) {
-    console.error('❌ Error en webhook Mercado Pago:', error.message);
-    return res.sendStatus(500);
+    next(new ApiError('Error en webhook Mercado Pago', 500, error.message));
   }
 };
