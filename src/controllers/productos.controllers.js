@@ -19,8 +19,11 @@ export const CrearProductoControllers = async (req, res, next) => {
       envase_id: parseInt(req.body.envase_id)
     };
 
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+
     const imagen = req.file;
-    const creado_por = 6;
+    const creado_por = req.usuario.id
 
     const producto = await Crear(datos, imagen, creado_por);
 
@@ -30,6 +33,7 @@ export const CrearProductoControllers = async (req, res, next) => {
       producto,
     });
   } catch (error) {
+    console.error("❌ ERROR REAL EN CREAR PRODUCTO:", error); // <--- AGREGAR ESTO
     next(
       error instanceof ApiError
         ? error

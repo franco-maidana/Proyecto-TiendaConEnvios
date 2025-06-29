@@ -6,6 +6,7 @@ let categoriaId;
 
 beforeEach(async () => {
   // Borra todas las tablas dependientes, de la más hija a la más padre
+  await Conexion.query("DELETE FROM valoraciones");
   await Conexion.query("DELETE FROM productos_vendidos");
   await Conexion.query("DELETE FROM ordenes_simplificadas");
   await Conexion.query("DELETE FROM productos_limpieza");

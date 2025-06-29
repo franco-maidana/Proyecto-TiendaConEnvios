@@ -78,9 +78,9 @@ export const ObtenerTodosLosUsuarios = async (req, res, next) => {
 // Actualizar usuario
 export const ActualizarDatosUsuario = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const id = req.usuario.id; // ¡Directo desde el JWT decodificado!
     const datos = req.body;
-    const rol = req.body.rol || "cliente";
+    const rol = req.usuario.rol || "cliente"; // igual desde JWT
 
     const usuario = await ModificarUsuario(id, datos, rol);
 
@@ -97,6 +97,7 @@ export const ActualizarDatosUsuario = async (req, res, next) => {
     );
   }
 };
+
 
 // Recuperar password
 export const RecuperarPassword = async (req, res, next) => {
@@ -185,7 +186,7 @@ export const EliminarUsuarioControllers = async (req, res, next) => {
 // Solicitar baja de usuario
 export const SolicitaBajaUsuario = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const id = req.usuario.id;
 
     const usuarios = await ObtenerUsuarioPorId(id);
 
